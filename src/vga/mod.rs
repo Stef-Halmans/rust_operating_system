@@ -1,5 +1,5 @@
 pub mod print;
-mod writer;
+pub mod writer;
 
 #[cfg(test)]
 mod test;

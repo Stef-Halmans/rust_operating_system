@@ -1,11 +1,10 @@
-use core::any::type_name;
+use core::{any::type_name, panic::PanicInfo};
 
-use crate::{serial_print, serial_println};
+use crate::{serial_print, serial_println, test::exit::{QemuExitCode, exit_qemu}, println};
 
 
-#[cfg(test)]
 pub fn test_runner(tests: &[&dyn Testable]) {
-    use crate::{exit::{QemuExitCode, exit_qemu}, serial_println};
+    println!("test");
 
     serial_println!("Running {} tests", tests.len());
 
@@ -14,6 +13,14 @@ pub fn test_runner(tests: &[&dyn Testable]) {
     }
 
     exit_qemu(QemuExitCode::Success);
+}
+
+
+pub fn test_panic_handler(info: &PanicInfo) -> ! {
+    serial_println!("[failed]");
+    serial_println!("Error: {}", info);
+    exit_qemu(QemuExitCode::Failed);
+    loop {}
 }
 
 pub trait Testable{
@@ -29,4 +36,5 @@ impl<T> Testable for T where T: Fn(), {
     }
 
 }
+
 

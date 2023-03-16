@@ -5,12 +5,7 @@ use spin::Mutex;
 use lazy_static::lazy_static;
 use volatile::Volatile;
 
-#[cfg(test)]
 pub const BUFFER_HEIGHT: usize = 25;
-
-#[cfg(not(test))]
-const BUFFER_HEIGHT: usize = 25;
-
 const BUFFER_WIDTH: usize = 80;
 const BUFFER_ADDRESS: i32 = 0xb8000;
 const UNKNOWN_CHAR: u8 = 0xfe;
@@ -82,7 +77,6 @@ impl Writer {
 
 
     // only used for testing, otherwise no reading from vga_buffer allowed/needed
-    #[cfg(test)]
     pub fn read_char(&mut self, row: usize, col: usize) -> char{
         char::from(self.buffer.chars[row][col].read().char)
     }
