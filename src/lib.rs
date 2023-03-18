@@ -4,15 +4,16 @@
 #![test_runner(crate::test::run::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-
+pub mod gdt;
+pub mod interrupts;
 pub mod serial;
 pub mod test;
 pub mod vga;
-pub mod interrupts;
-pub mod gdt;
 
 #[cfg(test)]
 use core::panic::PanicInfo;
+
+use x86_64::instructions;
 
 #[cfg(test)]
 #[panic_handler]
@@ -26,14 +27,20 @@ fn panic(info: &PanicInfo) -> ! {
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     init();
-
     test_main();
-
-    loop {}
+    hlt_loop();
 }
 
+pub fn hlt_loop() -> ! {
+    println!("start hlt loop");
+    loop{
+        instructions::hlt();
+    }
+}
 
 pub fn init() {
-    interrupts::init();
     gdt::init();
+    interrupts::init();
+    unsafe { interrupts::PICS.lock().initialize() };
+    instructions::interrupts::enable();
 }

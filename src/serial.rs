@@ -2,7 +2,8 @@ use core::fmt::{Arguments, Write};
 
 use lazy_static::lazy_static;
 use spin::Mutex;
-use uart_16550::SerialPort; 
+use uart_16550::SerialPort;
+use x86_64::instructions::interrupts; 
 
 lazy_static! {
     pub static ref SERIAL_HOST: Mutex<SerialPort> = {
@@ -13,7 +14,9 @@ lazy_static! {
 }
 
 pub fn _print(args: Arguments){
-    SERIAL_HOST.lock().write_fmt(args).expect("Printing to serial host failed");
+    interrupts::without_interrupts(||{
+        SERIAL_HOST.lock().write_fmt(args).expect("Printing to serial host failed");
+    });
 }
 
 #[macro_export]

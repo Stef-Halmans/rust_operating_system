@@ -1,5 +1,7 @@
 use core::fmt::{Arguments, Write};
 
+use x86_64::instructions::interrupts;
+
 use crate::vga::writer::WRITER;
 
 #[macro_export]
@@ -15,6 +17,8 @@ macro_rules! println {
 
 #[doc(hidden)]
 pub fn _print(args: Arguments){
-    WRITER.lock().write_fmt(args).expect("Issue running print macro");
+    interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).expect("Issue running print macro");
+    });
 }
 

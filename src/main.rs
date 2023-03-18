@@ -10,6 +10,8 @@ mod serial;
 
 use core::panic::PanicInfo;
 
+use operating_system::hlt_loop;
+
 
 #[cfg(not(test))]
 #[panic_handler]
@@ -31,12 +33,12 @@ pub extern "C" fn _start() -> ! {
     println!("hello world {}!", 100);
 
     operating_system::init();
+    println!("init finished");
 
     #[cfg(test)]
     test_main();
 
-    println!("start main loop");
-    loop {}
+    hlt_loop();
 }
 
 #[test_case]
