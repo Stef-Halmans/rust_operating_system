@@ -30,9 +30,12 @@ fn panic(info: &PanicInfo) -> ! {
 pub extern "C" fn _start() -> ! {
     println!("hello world {}!", 100);
 
+    operating_system::init();
+
     #[cfg(test)]
     test_main();
 
+    println!("start main loop");
     loop {}
 }
 
