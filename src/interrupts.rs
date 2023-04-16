@@ -4,10 +4,10 @@ use pic8259::ChainedPics;
 use spin::Mutex;
 use x86_64::{
     instructions::port::Port,
-    structures::idt::{InterruptDescriptorTable, InterruptStackFrame},
+    structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode}, registers::control::Cr2,
 };
 
-use crate::{gdt::DOUBLE_FAULT_IST_INDEX, print, println};
+use crate::{gdt::DOUBLE_FAULT_IST_INDEX, print, println, hlt_loop};
 
 pub const PIC_1_OFFSET: u8 = 32;
 pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
@@ -25,6 +25,7 @@ lazy_static! {
         unsafe {
             double_fault_entry_options.set_stack_index(DOUBLE_FAULT_IST_INDEX);
         }
+        idt.page_fault.set_handler_fn(page_fault_handler);
 
         idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_interrupt_handler);
         idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
@@ -104,6 +105,19 @@ extern "x86-interrupt" fn double_fault_handler_test(
     loop {}
 }
 
+extern "x86-interrupt" fn page_fault_handler(
+    stack_frame: InterruptStackFrame,
+    error_code: PageFaultErrorCode,
+) {
+    println!("EXCEPTION: PAGE FAULT");
+    println!("Accessed Adress {:?}", Cr2::read());
+    println!("Error Code: {:?}", error_code);
+    println!("{:#?}", stack_frame);
+
+    hlt_loop()
+
+}
+
 extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFrame) {
     print!(".");
     unsafe {
@@ -118,9 +132,9 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
 
     let mut keyboard = KEYBOARD.lock();
 
-    if let Ok(Some(key_event)) = keyboard.add_byte(scancode){
+    if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
         if let Some(key) = keyboard.process_keyevent(key_event) {
-            match key{
+            match key {
                 pc_keyboard::DecodedKey::Unicode(char) => print!("{}", char),
                 pc_keyboard::DecodedKey::RawKey(key) => print!("{:?}", key),
             }

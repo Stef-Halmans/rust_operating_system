@@ -33,7 +33,7 @@ pub extern "C" fn _start() -> ! {
 
 pub fn hlt_loop() -> ! {
     println!("start hlt loop");
-    loop{
+    loop {
         instructions::hlt();
     }
 }

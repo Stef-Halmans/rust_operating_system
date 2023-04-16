@@ -35,6 +35,9 @@ pub extern "C" fn _start() -> ! {
     operating_system::init();
     println!("init finished");
 
+    let ptr = 0x1240923490 as *mut u32;
+    unsafe {*ptr = 42;}
+
     #[cfg(test)]
     test_main();
 
